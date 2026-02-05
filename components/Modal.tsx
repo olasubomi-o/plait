@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ModalType } from '../App';
+import { ModalType } from '../App.tsx';
 
 interface ModalProps {
   type: ModalType;
