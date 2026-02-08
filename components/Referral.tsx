@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ModalType } from '../App';
+import { ModalType } from '../App.js';
 
 interface ReferralProps {
   onOpenModal: (type: ModalType) => void;

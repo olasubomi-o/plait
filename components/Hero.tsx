@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ModalType } from '../App';
+import { ModalType } from '../App.js';
 
 interface HeroProps {
   onOpenModal: (type: ModalType) => void;

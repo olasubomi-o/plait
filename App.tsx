@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import Features from './components/Features';
-import Cities from './components/Cities';
-import Referral from './components/Referral';
-import Footer from './components/Footer';
-import Modal from './components/Modal';
+import Navbar from './components/Navbar.js';
+import Hero from './components/Hero.js';
+import Features from './components/Features.js';
+import Cities from './components/Cities.js';
+import Referral from './components/Referral.js';
+import Footer from './components/Footer.js';
+import Modal from './components/Modal.js';
 
 export enum ModalType {
   USER_WAITLIST = 'USER_WAITLIST',
