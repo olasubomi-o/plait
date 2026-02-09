@@ -9,10 +9,12 @@ interface ModalProps {
 
 const Modal: React.FC<ModalProps> = ({ type, onClose }) => {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus("submitting");
+    setErrorMessage(null);
 
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
@@ -25,12 +27,18 @@ const Modal: React.FC<ModalProps> = ({ type, onClose }) => {
         body: JSON.stringify(data),
       });
 
-      if (!res.ok) throw new Error("Submission failed");
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = body.details || body.error || "Submission failed";
+        console.error("Submit error:", msg, body);
+        throw new Error(msg);
+      }
 
       setStatus("success");
     } catch (err) {
       console.error(err);
       setStatus("error");
+      setErrorMessage(err instanceof Error ? err.message : "Submission failed");
     }
   };
 
@@ -72,6 +80,11 @@ const Modal: React.FC<ModalProps> = ({ type, onClose }) => {
               Be the first to access our exclusive network of master stylists. Limited early-access slots available for our New York launch.
             </p>
             <form className="space-y-4 text-left" onSubmit={handleSubmit}>
+              {status === 'error' && errorMessage && (
+                <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-red-400 text-sm">
+                  {errorMessage}
+                </div>
+              )}
               <div>
                 <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2 ml-1 font-bold">Full Name</label>
                 <input name="fullName" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-primary/50 transition-all" placeholder="E.g. Julianne Moore" type="text" />
@@ -100,6 +113,11 @@ const Modal: React.FC<ModalProps> = ({ type, onClose }) => {
               Join an exclusive network of elite stylists. Gain access to premium tools and a platform that values your craft.
             </p>
             <form className="space-y-4" onSubmit={handleSubmit}>
+              {status === 'error' && errorMessage && (
+                <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-red-400 text-sm">
+                  {errorMessage}
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Full Name</label>
@@ -139,6 +157,11 @@ const Modal: React.FC<ModalProps> = ({ type, onClose }) => {
               </h2>
             </div>
             <form className="space-y-4" onSubmit={handleSubmit}>
+              {status === 'error' && errorMessage && (
+                <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-red-400 text-sm">
+                  {errorMessage}
+                </div>
+              )}
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 ml-1">Stylist's Name</label>
                 <input name="stylistName" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary transition-all placeholder:text-slate-700" placeholder="Full name of the artist" type="text" />

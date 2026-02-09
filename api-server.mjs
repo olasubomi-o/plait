@@ -27,10 +27,14 @@ function loadEnvLocal() {
 loadEnvLocal();
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabaseKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.warn("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local");
+  console.warn(
+    "Missing Supabase env. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) in .env.local"
+  );
 }
 
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
@@ -40,6 +44,17 @@ const tableMap = {
   STYLIST_WAITLIST: "stylist_waitlist",
   NOMINATE: "nominations",
 };
+
+/** Convert camelCase keys to snake_case for Supabase column names */
+function toSnakeCase(obj) {
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) continue;
+    const snake = k.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+    out[snake] = v;
+  }
+  return out;
+}
 
 const app = express();
 app.use(express.json());
@@ -59,19 +74,29 @@ app.post("/api/submit", async (req, res) => {
     }
 
     const tableName = tableMap[data.formType];
-    data.timestamp = new Date().toISOString();
+    const row = toSnakeCase({
+      ...data,
+      timestamp: new Date().toISOString(),
+    });
 
-    const { error } = await supabase.from(tableName).insert([data]);
+    const { error } = await supabase.from(tableName).insert([row]);
 
     if (error) {
-      console.error("Submission error:", error);
-      return res.status(500).json({ error: "Server error" });
+      console.error("Supabase insert error:", error);
+      return res.status(500).json({
+        error: "Server error",
+        details: error.message,
+        code: error.code,
+      });
     }
 
     return res.status(200).json({ success: true });
   } catch (err) {
     console.error("Submission error:", err);
-    return res.status(500).json({ error: "Server error" });
+    return res.status(500).json({
+      error: "Server error",
+      details: err instanceof Error ? err.message : String(err),
+    });
   }
 });
 
